@@ -1,0 +1,64 @@
+extensions:
+  health_check:
+  pprof:
+  zpages:
+
+processors:
+  batch:
+
+  attributes/remove_process_attrs:
+    actions:
+      - key: dddd
+        action: insert
+        value: XDDDD
+      - key: os.type
+        action: delete
+#      - key: process_command_args
+#        action: delete
+#      - key: process.pid
+#        action: delete
+#      - key: process.runtime.description
+#        action: delete
+#      - key: process.runtime.name
+#        action: delete
+#      - key: process.runtime.version
+#        action: delete
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+exporters:
+  debug:
+    verbosity: detailed
+  otlphttp/loki:
+    endpoint: http://loki:3100/otlp
+  otlphttp/tempo:
+    endpoint: http://tempo:4318
+  prometheusremotewrite:
+    endpoint: http://prometheus:9090/api/v1/write
+    tls:
+      insecure: true
+
+service:
+  telemetry:
+    logs:
+      level: debug
+  extensions: [ health_check, pprof, zpages ]
+  pipelines:
+    traces:
+      receivers: [ otlp ]
+      processors: [ batch ]
+      exporters: [ otlphttp/tempo ]
+    metrics:
+      receivers: [ otlp ]
+      processors: [ batch ]
+      exporters: [ prometheusremotewrite ]
+    logs:
+      receivers: [ otlp ]
+      processors: [ batch, attributes/remove_process_attrs ]
+      exporters: [ otlphttp/loki, debug ]
