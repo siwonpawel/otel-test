@@ -16,8 +16,10 @@ public class HelloWorldController
     @GetMapping("/hello")
     String helloWorld()
     {
-        log.info("Hello World #{}", counter.incrementAndGet());
-        return "Hello World";
+        long counterValue = counter.incrementAndGet();
+
+        log.info("Hello World #{}", counterValue);
+        return "Hello World #%d".formatted(counterValue);
     }
 
 }
