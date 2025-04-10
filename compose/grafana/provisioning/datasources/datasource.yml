@@ -12,18 +12,9 @@ datasources:
       exemplarTraceIdDestinations:
         - name: trace_id
           datasourceUid: tempo
-  - name: Loki
-    type: loki
-    uid: loki
-    access: proxy
-    url: http://loki:3100
-    editable: true
-    jsonData:
-      maxLines: 50
-      derivedFields:
-        - datasourceUid: tempo
-          name: trace_id
-          url: $${__value.raw}
+      prometheusType: Prometheus
+      prometheusVersion: "2.50.1"
+      customQueryParameters: ""
   - name: Tempo
     type: tempo
     uid: tempo
@@ -34,25 +25,22 @@ datasources:
     version: 1
     apiVersion: 1
     jsonData:
-      httpMethod: GET
       tracesToLogsV2:
-        datasourceUid: 'loki'
-        spanStartTimeShift: '-1h'
-        spanEndTimeShift: '1h'
-        filterByTraceID: true
-        filterBySpanID: true
+        customQuery: false
+        datasourceUid: loki
       tracesToMetrics:
-        datasourceUid: Prometheus
-      tracesToLogs:
-        datasourceUid: loki
-        mapTagNamesEnabled: true
-        filterByTraceID: true
-        filterBySpanID: true
-        spanStartTimeShift: '-10m'
-        spanEndTimeShift: '10m'
-      lokiSearch:
-        datasourceUid: loki
-      serviceMap:
         datasourceUid: prometheus
-      nodeGraph:
-        enabled: true
+  - name: Loki
+    type: loki
+    uid: loki
+    access: proxy
+    url: http://loki:3100
+    editable: true
+    jsonData:
+      derivedFields:
+        - name: trace_id
+          datasourceUid: tempo
+          matcherRegex: trace_id
+          matcherType: label
+          url: $${__value.raw}
+          urlDisplayLabel: "Go to trace"
